@@ -1,8 +1,8 @@
 'use client'
-import React, { HTMLAttributes, MapHTMLAttributes, PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react'
-import { GoogleMap, GoogleMapProps, Libraries, LoadScript, Marker, MarkerF, MarkerProps, useLoadScript } from '@react-google-maps/api'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { GoogleMap, InfoBox, Libraries, useLoadScript } from '@react-google-maps/api'
 import { eventList } from '@/utils';
-import MarkerSVG from './MarkerSVG';
+import MarkerSVG from '../../public/MarkerSVG';
 import { Root, createRoot } from 'react-dom/client'
 import CircleSVG from '../../public/CircleSVG';
 
@@ -17,7 +17,7 @@ function Map({ currentLoc }: { currentLoc: google.maps.LatLngLiteral }) {
 
     const mapOptions = useMemo<google.maps.MapOptions>(
         () => ({
-            disableDefaultUI: true,
+            disableDefaultUI: false,
             clickableIcons: false,
             scrollwheel: false,
             center: mapCenter,
@@ -47,19 +47,23 @@ function Map({ currentLoc }: { currentLoc: google.maps.LatLngLiteral }) {
                 options={mapOptions}
                 mapContainerStyle={{ width: '60%' }}
             >
-                {mapRef &&
+                {/* {mapRef &&
                     <AdvMarker position={mapCenter} map={mapRef}>
-                        <>
                             <CircleSVG />
-                            {/* <MarkerSVG markernumber={0} /> */}
-                        </>
                     </AdvMarker>
+                } */}
+                {
+                    mapRef && eventList.map((item, index) => (
+                        <AdvMarker key={index} position={item} map={mapRef}>
+                            <MarkerSVG markernumber={index + 1} />
+                        </AdvMarker>
+                    ))
                 }
-                {mapRef && eventList.map((item, index) => (
-                    <AdvMarker key={index} position={item} map={mapRef}>
-                        <MarkerSVG markernumber={index + 1} />
-                    </AdvMarker>
-                ))
+                {
+                    // mapRef && 
+                    // <InfoBox>
+                    //     <div className='border border-gray-800 bg-teal-500 h-[20px] w-[20px]'><p>Info Box</p></div>
+                    // </InfoBox>
                 }
             </GoogleMap>
         </>
@@ -76,8 +80,6 @@ const AdvMarker = ({ position, map, children }: {
 
     useEffect(() => {
         if (!rootRef?.current) {
-            console.log('if');
-
             const container = document.createElement("div")
             rootRef.current = createRoot(container)
             markerRef.current = new google.maps.marker.AdvancedMarkerElement({
@@ -95,8 +97,6 @@ const AdvMarker = ({ position, map, children }: {
             markerRef.current.map = map
         }
     }, [position, map, children])
-    return (
-        null
-    )
+    return (null)
 }
 export default Map
