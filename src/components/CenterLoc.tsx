@@ -5,7 +5,6 @@ function CenterLoc() {
 
     return (
         <div>
-            Search...
         </div>
     )
 }
