@@ -1,11 +1,13 @@
 'use client'
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { Autocomplete, CircleF, GoogleMap, InfoBox, Libraries, MarkerF, StandaloneSearchBox, StandaloneSearchBoxProps, useLoadScript } from '@react-google-maps/api'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Autocomplete, CircleF, GoogleMap, MarkerClustererF, InfoWindowF, Libraries, MarkerF, StandaloneSearchBox, StandaloneSearchBoxProps, useLoadScript, MarkerClusterer } from '@react-google-maps/api'
 import { eventList } from '@/utils';
 import { Root, createRoot } from 'react-dom/client'
 import Image from 'next/image';
 import usePlacesAutocomplete, { LatLng, getGeocode, getLatLng } from 'use-places-autocomplete';
 import SearchBox from './SearchBox';
+import { Cluster } from '@googlemaps/markerclusterer';
+import { Clusterer } from '@react-google-maps/marker-clusterer';
 
 const libraries = ["places", "marker"]
 
@@ -27,6 +29,7 @@ function Map({ mapRef, setMapsRef, currentLoc, setEventModal, userEventList }: {
     // const [circleBounds, setCircleBounds] = useState<google.maps.Circle | null>(null);
     const [defaultValue, setDefaultValue] = useState('')
     const [searchAutoBox, setSearchAutoBox] = useState<google.maps.places.Autocomplete | null>(null);
+    const [showInfoBox, setShowInfoBox] = useState(-1)
 
     const mapCenter: google.maps.LatLngLiteral = useMemo(() => (
         currentLoc
@@ -130,6 +133,10 @@ function Map({ mapRef, setMapsRef, currentLoc, setEventModal, userEventList }: {
         // mapRef?.setCenter(currentLoc)
     }
 
+    // const onPressedMarker = useCallback(() => {
+    //     setShowInfoBox()
+    // }, [])
+
     // const onPlacesChangedInner = () => {
     //     if (searchBoxInner) {
     //         const latlng = searchBoxInner.getPlace() as google.maps.places.PlaceResult
@@ -153,20 +160,22 @@ function Map({ mapRef, setMapsRef, currentLoc, setEventModal, userEventList }: {
     // }
 
     const mapOptions = useMemo<google.maps.MapOptions>(
-        () => ({
-            disableDefaultUI: true,
-            clickableIcons: false,
-            scrollwheel: false,
-            center: mapCenter,
-            mapId: process.env.NEXT_PUBLIC_MAP_ID,
-            maxZoom: 16,
-            minZoom: 5, //Number(16 - Math.log(100) / Math.log(2)),
-            zoomControl: false,
-            scaleControl: true,
-            streetViewControl: false,
-            rotateControl: false,
-            fullscreenControl: false
-        }), [mapCenter]);
+        () => (
+            {
+                disableDefaultUI: true,
+                clickableIcons: false,
+                scrollwheel: false,
+                center: mapCenter,
+                mapId: process.env.NEXT_PUBLIC_MAP_ID,
+                maxZoom: 16,
+                minZoom: 5, //Number(16 - Math.log(100) / Math.log(2)),
+                zoomControl: true,
+                scaleControl: true,
+                streetViewControl: false,
+                rotateControl: false,
+                fullscreenControl: false
+            }
+        ), [mapCenter]);
 
     // const onClickMap = (e: google.maps.MapMouseEvent) => {
     // setUserEventList([...userEventList, {
@@ -182,9 +191,15 @@ function Map({ mapRef, setMapsRef, currentLoc, setEventModal, userEventList }: {
     if (!isLoaded) {
         return (
             <div className='w-[60%] flex justify-center items-center'>
-                <p>Loading Map...</p>
+                <p></p>
             </div>
         )
+    }
+
+    const onLoadInfo = (index: number, item: google.maps.LatLngLiteral) => {
+        setShowInfoBox(index)
+        mapRef.panTo(item)
+        mapRef.setZoom(15)
     }
 
     return (
@@ -195,7 +210,7 @@ function Map({ mapRef, setMapsRef, currentLoc, setEventModal, userEventList }: {
             } */}
             {
                 (Object.keys(mapRef).length !== 0) &&
-                <>
+                <div className='absolute left-[7%] z-10 flex'>
                     {/* <StandaloneSearchBox
                         onLoad={onSBLoad}
                         onPlacesChanged={onPlacesChanged}
@@ -242,41 +257,39 @@ function Map({ mapRef, setMapsRef, currentLoc, setEventModal, userEventList }: {
                                 fontSize: `14px`,
                                 outline: `none`,
                                 textOverflow: `ellipses`,
-                                position: "absolute",
-                                left: "7%",
-                                zIndex: 10
+                                // position: "absolute",
+                                // left: "7%",
                                 // marginLeft: "-120x"
                             }}
                         />
                     </Autocomplete>
-                </>
+                    <button className='border-2 ml-2 border-white rounded-sm p-1 shadow bg-white text-sm' onClick={onPressedCreateEvent}>
+                        Create Event
+                    </button>
+                </div>
             }
-            {
-                mapCenter &&
-                <button className='z-10 absolute left-[350px] border-2 border-white rounded-sm p-1 shadow-xl bg-white text-sm' onClick={onPressedCreateEvent}>
-                    Create Event
-                </button>
-            }
-            <GoogleMap
-                onLoad={(map) => {
-                    setMapsRef(map)
-                }}
-                // onCenterChanged={() => {
-                //     console.log('cir', circleBounds);
-                //     const mapCenterNew = mapRef?.getCenter()
-                //     if (mapCenterNew) {
-                //         if (newLatLng && circleBounds && !circleBounds?.getBounds()?.contains(mapCenterNew)) {
-                //             mapRef?.panTo(newLatLng)
-                //             console.log(mapRef?.getBounds()?.contains(newLatLng));
-                //         }
-                //     }
-                // }}
-                // onClick={onClickMap}
-                zoom={16}
-                options={mapOptions}
-                mapContainerStyle={{ width: 600 }} //60%
-            >
-                {/* {
+            {console.log('mapCenter', Object.keys(mapCenter).length !== 0)}
+            {(Object.keys(mapCenter).length !== 0) &&
+                <GoogleMap
+                    onLoad={(map) => {
+                        setMapsRef(map)
+                    }}
+                    // onCenterChanged={() => {
+                    //     console.log('cir', circleBounds);
+                    //     const mapCenterNew = mapRef?.getCenter()
+                    //     if (mapCenterNew) {
+                    //         if (newLatLng && circleBounds && !circleBounds?.getBounds()?.contains(mapCenterNew)) {
+                    //             mapRef?.panTo(newLatLng)
+                    //             console.log(mapRef?.getBounds()?.contains(newLatLng));
+                    //         }
+                    //     }
+                    // }}
+                    // onClick={onClickMap}
+                    zoom={14}
+                    options={mapOptions}
+                    mapContainerStyle={{ width: 600 }} //60%
+                >
+                    {/* {
                     mapCenter &&
                     <Autocomplete
                         onLoad={onSBLoadInner}
@@ -306,58 +319,99 @@ function Map({ mapRef, setMapsRef, currentLoc, setEventModal, userEventList }: {
                         />
                     </Autocomplete>
                 } */}
-                {
-                    (Object.keys(mapRef).length !== 0) &&
-                    <CircleF
-                        center={mapRef.getCenter()}
-                        radius={50000}
-                        onLoad={(e) => {
-                            const circleBounds = e.getBounds()
-                            if (circleBounds) {
-                                mapRef?.fitBounds(circleBounds)
+                    {
+                        (Object.keys(mapRef).length !== 0) &&
+                        <CircleF
+                            center={mapRef.getCenter()}
+                            radius={50000}
+                            onLoad={(e) => {
+                                const circleBounds = e.getBounds()
+                                if (circleBounds) {
+                                    mapRef?.fitBounds(circleBounds)
+                                }
                             }
-                        }
-                        }
-                        options={{
-                            fillColor: 'transparent',//'#ffc0cb',//'transparent',
-                            strokeColor: 'transparent',
-                            strokeOpacity: 0.8,
-                        }}
-                    />
-                }
-                {
-                    (Object.keys(mapRef).length !== 0) && eventList.map((item, index) => (
-                        <MarkerF key={index} position={item} icon={{
-                            url: `${(index == 0) ? '/blueMarker.png' : (index == 1) ? '/greenMarker.png' : '/yellowMarker.png'}`, scaledSize: {
-                                width: 20, height: 20, equals: () => false
                             }
-                        }}
+                            options={{
+                                fillColor: 'transparent',//'#ffc0cb',//'transparent',
+                                strokeColor: 'transparent',
+                                strokeOpacity: 0.8,
+                            }}
                         />
-                    ))
-                }
-                {
-                    (userEventList.length !== 0) && (Object.keys(mapRef).length !== 0) && userEventList.map((item, index) => (
-                        <MarkerF position={item.location} icon={{
-                            url: ('/blueMarker.png'),
-                            scaledSize: {
-                                width: 25, height: 25, equals: () => false
+                    }
+                    {/* default Marker */}
+                    {/* {
+                        (Object.keys(mapRef).length !== 0) && eventList.map((item, index) => (
+                            <MarkerF key={index} position={item} icon={{
+                                url: `${(index == 0) ? '/blueMarker.png' : (index == 1) ? '/greenMarker.png' : '/yellowMarker.png'}`, scaledSize: {
+                                    width: 20, height: 20, equals: () => false
+                                }
+                            }}
+                                onClick={() => {
+                                    onLoadInfo(index, { lat: item.lat, lng: item.lng })
+                                }}
+                            >{(showInfoBox == index) &&
+                                <InfoWindowF
+                                    // onLoad={() => {
+                                    //     onLoadInfo({ lat: item.lat, lng: item.lng })
+                                    // }}
+                                    onCloseClick={() => setShowInfoBox(-1)}>
+                                    <div>
+                                        <div>{item.lat}</div>
+                                        <div>{item.lng}</div>
+                                    </div>
+                                </InfoWindowF>
+                                }
+                            </MarkerF>
+                        ))
+                    } */}
+                    <MarkerClustererF averageCenter={true} maxZoom={10}>
+                        {cluster => (
+                            <Clust clust={cluster} userEventList={userEventList} mapRef={mapRef} onLoadInfo={onLoadInfo} showInfoBox={showInfoBox} setShowInfoBox={setShowInfoBox} />
+                        )}
+                    </MarkerClustererF>
+
+                    {/* Marker Code */}
+                    {/* {(userEventList.length !== 0) && (Object.keys(mapRef).length !== 0) && userEventList.map((item, index) => (
+                        <MarkerF
+
+                            key={index}
+                            position={item.location}
+                            icon={{
+                                url: `${(index == 0) ? '/blueMarker.png' : (index == 1) ? '/greenMarker.png' : '/yellowMarker.png'}`,
+                                scaledSize: {
+                                    width: 25, height: 25, equals: () => false
+                                }
+                            }}
+                            onClick={() => {
+                                onLoadInfo(index, item.location)
+                            }}
+                        >
+                            {(showInfoBox == index) &&
+                                <InfoWindowF
+                                    // onLoad={() => onLoadInfo(item.location)} 
+                                    onCloseClick={() => setShowInfoBox(-1)}>
+                                    <div>
+                                        <div>{item.location.lat}</div>
+                                        <div>{item.location.lng}</div>
+                                        <div>{item.placeId}</div>
+                                    </div>
+                                </InfoWindowF>
                             }
-                        }}
-                        />
-                    ))
-                }
-                {/* {mapRef &&
+                        </MarkerF>
+                    ))} */}
+
+                    {/* {mapRef &&
                     <AdvMarker position={mapCenter} map={mapRef}>
                             <CircleSVG />
                     </AdvMarker>
                 } */}
-                {/* <MarkerF position={mapCenter} icon={{
+                    {/* <MarkerF position={mapCenter} icon={{
                     url: '/greenMarker.png', scaledSize: {
                         width: 20, height: 20, equals: () => false
                     }
                 }} /> */}
 
-                {/* {
+                    {/* {
                     mapRef && eventList.map((item, index) => (
                         <AdvMarker key={index} position={item} map={mapRef}>
                             <Image src={'/markerPNG.png'} width={20} height={20} alt='mark-img' />
@@ -370,14 +424,9 @@ function Map({ mapRef, setMapsRef, currentLoc, setEventModal, userEventList }: {
                             <Image src={'/markerPNG.png'} width={20} height={20} alt='mark-img' />
                         </AdvMarker>
                     ))
-                } */}
-                {
-                    // mapRef && 
-                    // <InfoBox>
-                    //     <div className='border border-gray-800 bg-teal-500 h-[20px] w-[20px]'><p>Info Box</p></div>
-                    // </InfoBox>
-                }
-            </GoogleMap>
+                }  */}
+                </GoogleMap>
+            }
         </>
     )
 }
@@ -410,5 +459,50 @@ const AdvMarker = ({ position, map, children }: {
         }
     }, [position, map, children])
     return (null)
+}
+
+const Clust = ({ mapRef, clust, userEventList, onLoadInfo, showInfoBox, setShowInfoBox }:
+    {
+        mapRef: google.maps.Map,
+        setShowInfoBox: React.Dispatch<React.SetStateAction<number>>,
+        userEventList: EventPropsTypes[],
+        clust: Clusterer,
+        onLoadInfo: (index: number, item: google.maps.LatLngLiteral) => void,
+        showInfoBox: number,
+    }) => {
+    console.log('Clust', userEventList, showInfoBox);
+
+    return (
+        <>
+            {(userEventList.length !== 0) && (Object.keys(mapRef).length !== 0) && userEventList.map((item, index) => (
+                <MarkerF
+                    key={index}
+                    position={item.location}
+                    icon={{
+                        url: `${(index == 0) ? '/blueMarker.png' : (index == 1) ? '/greenMarker.png' : '/yellowMarker.png'}`,
+                        scaledSize: {
+                            width: 25, height: 25, equals: () => false
+                        }
+                    }}
+                    onClick={() => {
+                        onLoadInfo(index, item.location)
+                    }}
+                    clusterer={clust}
+                >
+                    {(showInfoBox == index) &&
+                        <InfoWindowF
+                            // onLoad={() => onLoadInfo(item.location)} 
+                            onCloseClick={() => setShowInfoBox(-1)}>
+                            <div>
+                                <div>{item.location.lat}</div>
+                                <div>{item.location.lng}</div>
+                                <div>{item.placeId}</div>
+                            </div>
+                        </InfoWindowF>
+                    }
+                </MarkerF>
+            ))}
+        </>
+    )
 }
 export default Map

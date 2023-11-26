@@ -1,5 +1,5 @@
 import { Autocomplete } from '@react-google-maps/api'
-import React, { useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 
 type EventPropsTypes = {
     location: google.maps.LatLngLiteral;
@@ -14,6 +14,7 @@ function EventModal({ mapRef, setEventModal, setUserEventList, userEventList }: 
 }) {
 
     const [searchBoxInner, setSearchBoxInner] = useState<google.maps.places.Autocomplete | null>(null);
+    const focusRef = useRef<HTMLInputElement>()
 
     const onPlacesChangedInner = () => {
         if (searchBoxInner) {
@@ -26,20 +27,20 @@ function EventModal({ mapRef, setEventModal, setUserEventList, userEventList }: 
                     placeId: latlng.place_id,
                 }])
                 setEventModal(false)
-                // mapRef?.setCenter({ lat, lng })
+                mapRef?.panTo({ lat, lng })
                 // mapRef?.setZoom(8)
             } else {
                 console.log('no-result-Inner');
             }
         }
     }
-    
+
     const onSBLoadInner = (ref: google.maps.places.Autocomplete) => {
         setSearchBoxInner(ref);
     }
 
     return (
-        <div className=''>
+        <div className='absolute left-[7%] top-[15%]'>
             {
                 mapRef &&
                 <Autocomplete

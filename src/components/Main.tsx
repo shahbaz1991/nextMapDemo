@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useLayoutEffect, useState } from 'react'
 import Map from './Map'
 import EventsList from './EventsList'
 import CenterLoc from './CenterLoc'
@@ -22,11 +22,11 @@ type EventPropsTypes = {
 
 function Main() {
     const [mapRef, setMapsRef] = useState<google.maps.Map>({} as google.maps.Map)
-    const [currentLoc, setCurrentLoc] = useState<LocationType | null>(null);
+    const [currentLoc, setCurrentLoc] = useState<google.maps.LatLngLiteral>({} as google.maps.LatLngLiteral);
     const [eventModal, setEventModal] = useState(false);
     const [userEventList, setUserEventList] = useState<EventPropsTypes[]>([] as EventPropsTypes[])
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (navigator?.geolocation) {
             navigator.geolocation.getCurrentPosition(function (location) {
                 setCurrentLoc({
@@ -38,18 +38,26 @@ function Main() {
         }
     }, [navigator.geolocation])
 
+
     return (
         <div className='mx-[5%]'>
             <div className='bg-blue-400 h-[50px] w-[100%]'>
                 <CenterLoc />
             </div>
-            <div className='flex flex-row grow gap-x-2 box-border'>
-                <Map mapRef={mapRef} setMapsRef={setMapsRef} setEventModal={setEventModal} currentLoc={currentLoc || defaultLoc} userEventList={userEventList} />
-                <EventsList />
-            </div>
-            {
-                eventModal &&
-                <EventModal mapRef={mapRef} setEventModal={setEventModal} setUserEventList={setUserEventList} userEventList={userEventList} />
+            {(Object.keys(currentLoc).length !== 0) ?
+                <>
+                    <div className='h-[500px] flex flex-row grow gap-x-2 box-border'>
+                        <Map mapRef={mapRef} setMapsRef={setMapsRef} setEventModal={setEventModal} currentLoc={currentLoc} userEventList={userEventList} />
+                        {/* <EventsList /> */}
+                    </div>
+                    {
+                        eventModal &&
+                        <EventModal mapRef={mapRef} setEventModal={setEventModal} setUserEventList={setUserEventList} userEventList={userEventList} />
+                    }
+                </>
+                : <div className='w-[60%] flex justify-center items-center'>
+                    <p>Loading Map...</p>
+                </div>
             }
         </div>
     )
