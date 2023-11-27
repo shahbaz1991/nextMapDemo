@@ -28,7 +28,7 @@ function EventModal({ mapRef, setEventModal, setUserEventList, userEventList }: 
                 }])
                 setEventModal(false)
                 mapRef?.panTo({ lat, lng })
-                // mapRef?.setZoom(8)
+                mapRef?.setZoom(13)
             } else {
                 console.log('no-result-Inner');
             }

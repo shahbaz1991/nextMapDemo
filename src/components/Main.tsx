@@ -46,7 +46,7 @@ function Main() {
             </div>
             {(Object.keys(currentLoc).length !== 0) ?
                 <>
-                    <div className='h-[500px] flex flex-row grow gap-x-2 box-border'>
+                    <div className='h-[500px] w-[100%] flex flex-row grow gap-x-2 box-border'>
                         <Map mapRef={mapRef} setMapsRef={setMapsRef} setEventModal={setEventModal} currentLoc={currentLoc} userEventList={userEventList} />
                         {/* <EventsList /> */}
                     </div>

@@ -1,6 +1,6 @@
 'use client'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Autocomplete, CircleF, GoogleMap, MarkerClustererF, InfoWindowF, Libraries, MarkerF, StandaloneSearchBox, StandaloneSearchBoxProps, useLoadScript, MarkerClusterer } from '@react-google-maps/api'
+import { Autocomplete, CircleF, GoogleMap, MarkerClustererF, InfoWindowF, Libraries, MarkerF, StandaloneSearchBox, StandaloneSearchBoxProps, useLoadScript, MarkerClusterer, Marker } from '@react-google-maps/api'
 import { eventList } from '@/utils';
 import { Root, createRoot } from 'react-dom/client'
 import Image from 'next/image';
@@ -268,7 +268,6 @@ function Map({ mapRef, setMapsRef, currentLoc, setEventModal, userEventList }: {
                     </button>
                 </div>
             }
-            {console.log('mapCenter', Object.keys(mapCenter).length !== 0)}
             {(Object.keys(mapCenter).length !== 0) &&
                 <GoogleMap
                     onLoad={(map) => {
@@ -287,38 +286,8 @@ function Map({ mapRef, setMapsRef, currentLoc, setEventModal, userEventList }: {
                     // onClick={onClickMap}
                     zoom={14}
                     options={mapOptions}
-                    mapContainerStyle={{ width: 600 }} //60%
+                    mapContainerStyle={{ width: '100%' }}
                 >
-                    {/* {
-                    mapCenter &&
-                    <Autocomplete
-                        onLoad={onSBLoadInner}
-                        onPlaceChanged={onPlacesChangedInner}
-                    // options={{
-                    //     bounds: circleBounds?.getBounds(),
-                    //     strictBounds: true
-                    // }}
-                    >
-                        <input
-                            type='text'
-                            style={{
-                                boxSizing: `border-box`,
-                                border: `1px solid transparent`,
-                                width: `240px`,
-                                height: `32px`,
-                                padding: `0 12px`,
-                                borderRadius: `3px`,
-                                boxShadow: `0 2px 6px rgba(0, 0, 0, 0.3)`,
-                                fontSize: `14px`,
-                                outline: `none`,
-                                textOverflow: `ellipses`,
-                                position: "absolute",
-                                left: "50%",
-                                // marginLeft: "-120x"
-                            }}
-                        />
-                    </Autocomplete>
-                } */}
                     {
                         (Object.keys(mapRef).length !== 0) &&
                         <CircleF
@@ -338,35 +307,90 @@ function Map({ mapRef, setMapsRef, currentLoc, setEventModal, userEventList }: {
                             }}
                         />
                     }
+
                     {/* default Marker */}
-                    {/* {
-                        (Object.keys(mapRef).length !== 0) && eventList.map((item, index) => (
-                            <MarkerF key={index} position={item} icon={{
-                                url: `${(index == 0) ? '/blueMarker.png' : (index == 1) ? '/greenMarker.png' : '/yellowMarker.png'}`, scaledSize: {
-                                    width: 20, height: 20, equals: () => false
+                    {/* <MarkerClustererF
+                        enableRetinaIcons={true}
+                        gridSize={60}
+                        averageCenter={true}
+                        onUnmount={(clusterer) => clusterer.clearMarkers()}
+                    >
+                        {(markerClusterer: Clusterer) => (
+                            <div>
+                                {
+                                    (Object.keys(mapRef).length !== 0) && eventList.map((item, index) => (
+                                        <MarkerF
+                                            key={index}
+                                            position={item}
+                                            icon={{
+                                                url: `${(index == 0) ? '/blueMarker.png' : (index == 1) ? '/greenMarker.png' : '/yellowMarker.png'}`, scaledSize: {
+                                                    width: 20, height: 20, equals: () => false
+                                                }
+                                            }}
+                                            // onClick={() => {
+                                            //     onLoadInfo(index, { lat: item.lat, lng: item.lng })
+                                            // }}
+                                            clusterer={markerClusterer}
+                                        >
+                                            {(showInfoBox == index) &&
+                                                <InfoWindowF
+                                                    // onLoad={() => {
+                                                    //     onLoadInfo({ lat: item.lat, lng: item.lng })
+                                                    // }}
+                                                    onCloseClick={() => setShowInfoBox(-1)}>
+                                                    <div>
+                                                        <div>{item.lat}</div>
+                                                        <div>{item.lng}</div>
+                                                    </div>
+                                                </InfoWindowF>
+                                            }
+                                        </MarkerF>
+                                    ))
                                 }
-                            }}
-                                onClick={() => {
-                                    onLoadInfo(index, { lat: item.lat, lng: item.lng })
-                                }}
-                            >{(showInfoBox == index) &&
-                                <InfoWindowF
-                                    // onLoad={() => {
-                                    //     onLoadInfo({ lat: item.lat, lng: item.lng })
-                                    // }}
-                                    onCloseClick={() => setShowInfoBox(-1)}>
-                                    <div>
-                                        <div>{item.lat}</div>
-                                        <div>{item.lng}</div>
-                                    </div>
-                                </InfoWindowF>
-                                }
-                            </MarkerF>
-                        ))
-                    } */}
-                    <MarkerClustererF averageCenter={true} maxZoom={10}>
+                            </div>
+                        )}
+                    </MarkerClustererF> */}
+
+                    {/* User created marker */}
+                    <MarkerClustererF
+                        enableRetinaIcons={true}
+                        gridSize={60}
+                        averageCenter={true}
+                        onUnmount={(clusterer) => clusterer.clearMarkers()}
+                        maxZoom={13}
+                    >
                         {cluster => (
-                            <Clust clust={cluster} userEventList={userEventList} mapRef={mapRef} onLoadInfo={onLoadInfo} showInfoBox={showInfoBox} setShowInfoBox={setShowInfoBox} />
+                            <div>
+                                {(userEventList.length !== 0) && (Object.keys(mapRef).length !== 0) && userEventList.map((item, index) => (
+                                    <MarkerF
+                                        key={index}
+                                        position={item.location}
+                                        icon={{
+                                            url: `${(index == 0) ? '/blueMarker.png' : (index == 1) ? '/greenMarker.png' : '/yellowMarker.png'}`,
+                                            scaledSize: {
+                                                width: 25, height: 25, equals: () => false
+                                            }
+                                        }}
+                                        onClick={() => {
+                                            onLoadInfo(index, item.location)
+                                        }}
+                                        clusterer={cluster}
+                                    // noClustererRedraw={true}
+                                    >
+                                        {(showInfoBox == index) &&
+                                            <InfoWindowF
+                                                // onLoad={() => onLoadInfo(item.location)} 
+                                                onCloseClick={() => setShowInfoBox(-1)}>
+                                                <div>
+                                                    <div>{item.location.lat}</div>
+                                                    <div>{item.location.lng}</div>
+                                                    <div>{item.placeId}</div>
+                                                </div>
+                                            </InfoWindowF>
+                                        }
+                                    </MarkerF>
+                                ))}
+                            </div>
                         )}
                     </MarkerClustererF>
 
@@ -470,7 +494,6 @@ const Clust = ({ mapRef, clust, userEventList, onLoadInfo, showInfoBox, setShowI
         onLoadInfo: (index: number, item: google.maps.LatLngLiteral) => void,
         showInfoBox: number,
     }) => {
-    console.log('Clust', userEventList, showInfoBox);
 
     return (
         <>
