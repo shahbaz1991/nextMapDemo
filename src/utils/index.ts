@@ -1,3 +1,5 @@
+import { EventPropsTypes } from "@/components/Main"
+
 export const mapStyle1 = [
     {
         "featureType": "administrative.province",
@@ -418,20 +420,48 @@ export const mapStyle2 = [
     }
 ]
 
-export const eventList = [
+export const eventList: EventPropsTypes[] = [
     {
-        lat: 22.57081966903408, lng: 88.43293100998314,
+        id: 0, lat: 22.57081966903408, lng: 88.43293100998314, eventType: 'blue'
     },
     {
-        lat: 22.56959118695109, lng: 88.43143970179288
+        id: 1, lat: 22.571488377884414, lng: 88.42754974728076, eventType: 'yellow'
     },
     {
-        lat: 22.569888401362235, lng: 88.43479782742992
+        id: 2, lat: 22.56959118695109, lng: 88.43143970179288, eventType: 'green'
     },
     {
-        lat: 22.57193852577691, lng: 88.43454327386266
+        id: 3, lat: 22.569888401362235, lng: 88.43479782742992, eventType: 'green'
     },
     {
-        lat: 22.571507866742078, lng: 88.43063573077494
+        id: 4, lat: 22.57193852577691, lng: 88.43454327386266, eventType: 'blue'
+    },
+    {
+        id: 5, lat: 22.571507866742078, lng: 88.43063573077494, eventType: 'yellow'
+    },
+    {
+        id: 6, lat: 22.56836547459435, lng: 88.4326821056448, eventType: 'green'
+    },
+    {
+        id: 7, lat: 22.57147268507993, lng: 88.4354862087245, eventType: 'blue'
+    },
+    {
+        id: 8, lat: 22.827577897983478, lng: 88.63739069968172, eventType: 'green'
+    },
+    {
+        id: 9, lat: 22.680674156027028, lng: 88.86261041650417, eventType: 'green'
+    },
+    // outside
+    {
+        id: 10, lat: 23.057745329820065, lng: 88.82690485164207, eventType: 'green'
+    },
+    {
+        id: 11, lat: 22.7338816819745, lng: 89.04113824081465, eventType: 'green'
+    },
+    {
+        id: 12, lat: 22.294939490792476, lng: 87.8985601652276, eventType: 'blue'
+    },
+    {
+        id: 13, lat: 22.43717726075172, lng: 87.8628546003655, eventType: 'blue'
     }
 ]

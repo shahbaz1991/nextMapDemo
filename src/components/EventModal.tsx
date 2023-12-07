@@ -1,16 +1,18 @@
 import { Autocomplete } from '@react-google-maps/api'
 import React, { useEffect, useState, useRef } from 'react'
+import { EventPropsTypes } from './Main';
+import { eventList } from '@/utils';
 
-type EventPropsTypes = {
-    location: google.maps.LatLngLiteral;
-    placeId?: string;
-}
-
-function EventModal({ mapRef, setEventModal, setUserEventList, userEventList }: {
+function EventModal({ mapRef, setEventModal, setUserEventList, userEventList, userUEL, setUserUEL, circleBounds, curIndex, setCurIndex }: {
     mapRef: google.maps.Map,
     setEventModal: React.Dispatch<React.SetStateAction<boolean>>,
     userEventList: EventPropsTypes[],
     setUserEventList: React.Dispatch<React.SetStateAction<EventPropsTypes[]>>
+    userUEL: EventPropsTypes[],
+    setUserUEL: React.Dispatch<React.SetStateAction<EventPropsTypes[]>>,
+    circleBounds: google.maps.Circle,
+    curIndex: number,
+    setCurIndex: React.Dispatch<React.SetStateAction<number>>,
 }) {
 
     const [searchBoxInner, setSearchBoxInner] = useState<google.maps.places.Autocomplete | null>(null);
@@ -22,13 +24,29 @@ function EventModal({ mapRef, setEventModal, setUserEventList, userEventList }: 
             if (latlng) {
                 const lat = latlng.geometry?.location?.lat() as number
                 const lng = latlng.geometry?.location?.lng() as number
-                setUserEventList([...userEventList, {
-                    location: { lat, lng },
-                    placeId: latlng.place_id,
-                }])
+                if ((Object.keys(circleBounds).length !== 0) && (circleBounds.getBounds()?.contains({ lat, lng }))) {
+                    setUserEventList([
+                        ...userEventList,
+                        {
+                            id: curIndex,
+                            lat, lng,
+                            placeId: latlng.place_id,
+                            eventType: 'blue'
+                        }
+                    ])
+                    setCurIndex(curIndex + 1)
+                } else {
+                    setUserUEL([...userUEL, {
+                        id: curIndex,
+                        lat, lng,
+                        placeId: latlng.place_id,
+                        eventType: 'blue'
+                    }])
+                    setCurIndex(curIndex + 1)
+                }
                 setEventModal(false)
-                mapRef?.panTo({ lat, lng })
-                mapRef?.setZoom(13)
+                // mapRef?.panTo({ lat, lng })
+                // mapRef?.setZoom(13)
             } else {
                 console.log('no-result-Inner');
             }
@@ -40,7 +58,7 @@ function EventModal({ mapRef, setEventModal, setUserEventList, userEventList }: 
     }
 
     return (
-        <div className='absolute left-[7%] top-[15%]'>
+        <div className='absolute md:left-[110px] sm:left-[15px] top-[15%]'>
             {
                 mapRef &&
                 <Autocomplete
